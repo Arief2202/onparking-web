@@ -46,10 +46,12 @@ class MallController extends Controller
             // dd($spotParkirs);
             // dd($spotParkirs->whereNotIn('id', $order->pluck('spot_parkir_id')->toArray())->pluck('lantai'));
             foreach($spotParkirs->whereNotIn('id', $order->pluck('spot_parkir_id'))->pluck('lantai')->unique()->toArray() as $lantai){
-                $spot[$key++] = ([
-                    'lantai' => (String) $lantai,
-                    'blok'=>spot_parkir::where('mall_id', '=', $mall->id)->whereNotIn('id', $order->pluck('spot_parkir_id'))->where('lantai', '=', $lantai)->where('carExist', '=', 0)->pluck('blok')->toArray(),
-                ]);
+                if(spot_parkir::where('mall_id', '=', $mall->id)->whereNotIn('id', $order->pluck('spot_parkir_id'))->where('lantai', '=', $lantai)->where('carExist', '=', 0)->pluck('blok')->count() != 0){
+                    $spot[$key++] = ([
+                        'lantai' => (String) $lantai,
+                        'blok'=>spot_parkir::where('mall_id', '=', $mall->id)->whereNotIn('id', $order->pluck('spot_parkir_id'))->where('lantai', '=', $lantai)->where('carExist', '=', 0)->pluck('blok')->toArray(),
+                    ]);
+                }
             }
             // dd($order->pluck('spot_parkir_id')->toArray());
             $orderCount += $spotParkirs->whereNotIn('id', $order->pluck('spot_parkir_id'))->where('carExist', '=', 1)->count();
