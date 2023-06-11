@@ -25,8 +25,8 @@ class MallController extends Controller
     }
     public function readMall(){        
         foreach(Order::all() as $order){            
-            $now = Carbon::parse(date('Y-m-d H:i:s'))->addHour(7);
-            $expired = Carbon::parse($order->expired_time)->addHour(7);
+            $now = Carbon::parse(date('Y-m-d H:i:s'));
+            $expired = Carbon::parse($order->expired_time);
             if($now > $expired && $order->status == 0){
                 $order->status = 4;
                 $order->save();
@@ -77,8 +77,8 @@ class MallController extends Controller
     }
     public function detailMall($id){        
         foreach(Order::all() as $order){            
-            $now = Carbon::parse(date('Y-m-d H:i:s'))->addHour(7);
-            $expired = Carbon::parse($order->expired_time)->addHour(7);
+            $now = Carbon::parse(date('Y-m-d H:i:s'));
+            $expired = Carbon::parse($order->expired_time);
             if($now > $expired && $order->status == 0){
                 $order->status = 4;
                 $order->save();
@@ -97,8 +97,8 @@ class MallController extends Controller
     }
     public function readMallBooked($id){        
         foreach(Order::all() as $order){            
-            $now = Carbon::parse(date('Y-m-d H:i:s'))->addHour(7);
-            $expired = Carbon::parse($order->expired_time)->addHour(7);
+            $now = Carbon::parse(date('Y-m-d H:i:s'));
+            $expired = Carbon::parse($order->expired_time);
             if($now > $expired && $order->status == 0){
                 $order->status = 4;
                 $order->save();

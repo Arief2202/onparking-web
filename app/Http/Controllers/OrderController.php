@@ -32,9 +32,9 @@ class OrderController extends Controller
         $status = Order::insert([
             'user_id' => $request->user_id,
             'spot_parkir_id' => $spot->id,
-            'order_time' => Carbon::parse(date('Y-m-d H:i:s'))->addHour(7),
+            'order_time' => Carbon::parse(date('Y-m-d H:i:s')),
             'expired_time' => date(Carbon::now()->addMinutes(1)),
-            'created_at' => Carbon::parse(date('Y-m-d H:i:s'))->addHour(7),
+            'created_at' => Carbon::parse(date('Y-m-d H:i:s')),
         ]);
         $data['booking'] = Order::where('spot_parkir_id', '=', $spot->id)->where('user_id', '=', $request->user_id)->first();
         $data['user'] = User::where('id', '=', $request->user_id)->get();
@@ -55,8 +55,8 @@ class OrderController extends Controller
         $index=0;
         
         foreach(Order::all() as $order){            
-            $now = Carbon::parse(date('Y-m-d H:i:s'))->addHour(7);
-            $expired = Carbon::parse($order->expired_time)->addHour(7);
+            $now = Carbon::parse(date('Y-m-d H:i:s'));
+            $expired = Carbon::parse($order->expired_time);
             if($now > $expired && $order->status == 0){
                 $order->status = 4;
                 $order->save();
@@ -64,8 +64,8 @@ class OrderController extends Controller
         }
 
         foreach(Order::where('user_id', '=', $id)->get()->reverse() as $order){            
-            $now = Carbon::parse(date('Y-m-d H:i:s'))->addHour(7);
-            $expired = Carbon::parse($order->expired_time)->addHour(7);
+            $now = Carbon::parse(date('Y-m-d H:i:s'));
+            $expired = Carbon::parse($order->expired_time);
             if($now > $expired && $order->status == 0){
                 $order->status = 4;
                 $order->save();
@@ -92,14 +92,29 @@ class OrderController extends Controller
             $malls['orderCount'] = Order::whereIn('spot_parkir_id', $spotParkirs->pluck('id')->toArray())->where('status', '<', '3')->count();
             $malls['spot_ready'] = $spot;
 
+            $checkinTime =  new Carbon($order->checkin_time);
+            if($order->checkout_time != null) $checkoutTime = new Carbon($order->checkout_time);
+            else $checkoutTime = Carbon::parse(date('Y-m-d H:i:s'));
+
+            $lamaParkir = $checkinTime->diff($checkoutTime);
+
+            $hariParkir = (int) $lamaParkir->format('%d');
+            $addHour = $hariParkir > 0 ? (int) $hariParkir*24 : 0;
+            $jamParkir = (int) $lamaParkir->format('%H') + $addHour;
+
+            $estimasi_harga = ((int) $jamParkir) * (int) $spot_parkir->harga;
+            $spot_parkir->harga = number_format($spot_parkir->harga, 0, '','.');
+
             $orders[$index]['id'] = $order->id;
             $orders[$index]['spot_parkir'] = $spot_parkir;
             $orders[$index]['mall'] = $malls;
             $orders[$index]['progress'] = $order->status;
-            $orders[$index]['expired_time'] = $order->expired_time;
-            $orders[$index]['order_time'] = $order->order_time;
-            $orders[$index]['checkIn_time'] = $order->checkin_time;
-            $orders[$index]['checkOut_time'] = $order->checkout_time;
+            $orders[$index]['expired_time'] = $order->expired_time == null ? null : date('H:i:s d M Y', strtotime($order->expired_time));
+            $orders[$index]['order_time'] = $order->order_time == null ? null : date('H:i:s d M Y', strtotime($order->order_time));
+            $orders[$index]['checkin_time'] = $order->checkin_time == null ? null : date('H:i:s d M Y', strtotime($order->checkin_time));
+            $orders[$index]['checkout_time'] = $order->checkout_time == null ? null : date('H:i:s d M Y', strtotime($order->checkout_time));
+            $orders[$index]['durasi_parkir'] =  $jamParkir.$lamaParkir->format(' Jam, %i Menit');
+            $orders[$index]['estimasi_harga'] = number_format($estimasi_harga, 0, '','.');
             $index++;
         }
         $user = User::where('id', '=', $id)->first();
@@ -151,7 +166,7 @@ class OrderController extends Controller
         if(strlen($orders->where('status', '=', '0')) <= 2) return response()->json(['success' => false,'pesan' => 'This User Doesn\'t Have Waiting Status on this spot!'],400)->header('Access-Control-Allow-Origin', '*')->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
         $order = $orders->where('status', '=', '0')->first();
         $order->status = 1;
-        $order->checkIn_time = Carbon::parse(date('Y-m-d H:i:s'))->addHour(7);        
+        $order->checkIn_time = Carbon::parse(date('Y-m-d H:i:s'));        
         $order->save();
         
         return response()->json(
@@ -176,7 +191,7 @@ class OrderController extends Controller
         foreach($orders as $order){
             // $order = $orders->where('status', '=', '1')->first();
             $order->status = 2;
-            $order->checkout_time = Carbon::parse(date('Y-m-d H:i:s'))->addHour(7);        
+            $order->checkout_time = Carbon::parse(date('Y-m-d H:i:s'));        
             $order->save();
         }
         return response()->json(

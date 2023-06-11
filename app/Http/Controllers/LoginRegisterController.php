@@ -13,8 +13,8 @@ class LoginRegisterController extends Controller
 {
     public function handleLogin(Request $request){        
         foreach(Order::all() as $order){            
-            $now = Carbon::parse(date('Y-m-d H:i:s'))->addHour(7);
-            $expired = Carbon::parse($order->expired_time)->addHour(7);
+            $now = Carbon::parse(date('Y-m-d H:i:s'));
+            $expired = Carbon::parse($order->expired_time);
             if($now > $expired && $order->status == 0){
                 $order->status = 4;
                 $order->save();
@@ -58,8 +58,8 @@ class LoginRegisterController extends Controller
     public function handleLoginEncrypted(Request $request){
 
         foreach(Order::all() as $order){            
-            $now = Carbon::parse(date('Y-m-d H:i:s'))->addHour(7);
-            $expired = Carbon::parse($order->expired_time)->addHour(7);
+            $now = Carbon::parse(date('Y-m-d H:i:s'));
+            $expired = Carbon::parse($order->expired_time);
             if($now > $expired && $order->status == 0){
                 $order->status = 4;
                 $order->save();
@@ -101,8 +101,8 @@ class LoginRegisterController extends Controller
     }
     public function handleRegister(Request $request){        
         foreach(Order::all() as $order){            
-            $now = Carbon::parse(date('Y-m-d H:i:s'))->addHour(7);
-            $expired = Carbon::parse($order->expired_time)->addHour(7);
+            $now = Carbon::parse(date('Y-m-d H:i:s'));
+            $expired = Carbon::parse($order->expired_time);
             if($now > $expired && $order->status == 0){
                 $order->status = 4;
                 $order->save();
