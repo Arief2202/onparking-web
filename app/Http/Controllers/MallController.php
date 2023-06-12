@@ -12,6 +12,59 @@ use Carbon\Carbon;
 
 class MallController extends Controller
 {
+    public function updateMall(Request $request){
+        $mall = MallList::where('id', $request->id)->first();
+        if($mall->user_id != Auth::user()->id) return redirect('/mymall');
+        if(isset($request->fotoMall)) $mall->fotoMall = $request->fotoMall;
+        if(isset($request->namaMall)) $mall->namaMall = $request->namaMall;
+        if(isset($request->alamatMall)) $mall->alamatMall = $request->alamatMall;
+        if(isset($request->openTimeMall)) $mall->openTimeMall = $request->openTimeMall;
+        $mall->save();
+        return redirect('/mymall')->with('status', 'mall-updated');
+    }
+
+    public function webMyMallList(){
+        $mall = MallList::where('user_id', Auth::user()->id)->first();
+        if(!$mall) return redirect('/profile');
+        return view('myMall', [
+            'mall' => $mall,
+            'spots' => spot_parkir::where('mall_id', $mall->id)->get(),
+        ]);
+    }
+
+    public function tambahMall(Request $request){
+        $mall = new MallList();
+        $mall->namaMall = $request->namaMall;
+        $mall->alamatMall = "-";
+        $mall->openTimeMall = "-";
+        $mall->fotoMall = "/no_image.png";
+        $mall->save();
+        return redirect('/mall/list');
+    }
+    public function deleteMall(Request $request){
+        $mall = MallList::where('id', $request->mall_id)->first();
+        foreach(spot_parkir::where('mall_id', $mall->id)->get() as $spot){            
+            foreach(Order::where('spot_parkir_id', $spot->id)->get() as $order) $order->delete();
+            $spot->delete();
+        }
+        $mall->delete();
+        return redirect('/mall/list');
+    }
+    public function changeOwner(Request $request){
+        $mall = MallList::where('id', $request->mall_id)->first();
+        if(MallList::where('id', '!=', $request->mall_id)->where('user_id', $request->user_id)->first() && $request->user_id != null) return redirect('/mall/list');
+        $mall->user_id = $request->user_id;
+        $mall->save();
+        return redirect('/mall/list');
+    }
+    
+    public function webMallList(){
+        if(Auth::user()->role != 1) return redirect('/profile');
+        return view('mallList', [
+            'malls' => MallList::all(),
+        ]);
+    }
+
     public function test(){
                 return response()->json(
             [
@@ -163,44 +216,44 @@ class MallController extends Controller
         )->header('Access-Control-Allow-Origin', '*')->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     }
 
-    public function deleteMall(Request $request){    
-        if(strlen($request->email) < 1) return response()->json(['success' => false,'pesan' => 'Email Required!'],400)->header('Access-Control-Allow-Origin', '*')->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        if(strlen($request->password) < 1) return response()->json(['success' => false,'pesan' => 'Password Required!'],400)->header('Access-Control-Allow-Origin', '*')->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        if($user = User::where('email', '=', $request->email)->first()){
-            if($user->email == $request->email && $user->password == $request->password){
-                if($user->role != "1"){
-                    return response()->json(
-                        [
-                            'success' => false,
-                            'pesan' => 'You are not Admin!'
-                        ],
-                        400
-                    )->header('Access-Control-Allow-Origin', '*')->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-                }
-            }
-            else{
-                return response()->json(
-                    [
-                        'success' => false,
-                        'data' => '',
-                        'pesan' => 'Wrong Email or Password !'
-                    ],
-                    400
-                )->header('Access-Control-Allow-Origin', '*')->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-            }
-        }
-        if(strlen($request->idMall) < 1) return response()->json(['success' => false,'pesan' => 'ID Mall Required!'],400)->header('Access-Control-Allow-Origin', '*')->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        if(MallList::where('id', '=', $request->idMall)->first() == null) return response()->json(['success' => false,'pesan' => 'Mall not Found!'],400)->header('Access-Control-Allow-Origin', '*')->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        MallList::where('id', '=', $request->idMall)->first()->delete();
-        foreach(Order::where('mall_id', '=', $request->idMall)->get() as $order){
-            $order->delete();
-        }
-        return response()->json(
-            [
-                'success' => true,
-                'pesan' => 'Delete Successfully'
-            ],
-            200
-        )->header('Access-Control-Allow-Origin', '*')->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    }
+    // public function deleteMall(Request $request){    
+    //     if(strlen($request->email) < 1) return response()->json(['success' => false,'pesan' => 'Email Required!'],400)->header('Access-Control-Allow-Origin', '*')->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    //     if(strlen($request->password) < 1) return response()->json(['success' => false,'pesan' => 'Password Required!'],400)->header('Access-Control-Allow-Origin', '*')->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    //     if($user = User::where('email', '=', $request->email)->first()){
+    //         if($user->email == $request->email && $user->password == $request->password){
+    //             if($user->role != "1"){
+    //                 return response()->json(
+    //                     [
+    //                         'success' => false,
+    //                         'pesan' => 'You are not Admin!'
+    //                     ],
+    //                     400
+    //                 )->header('Access-Control-Allow-Origin', '*')->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    //             }
+    //         }
+    //         else{
+    //             return response()->json(
+    //                 [
+    //                     'success' => false,
+    //                     'data' => '',
+    //                     'pesan' => 'Wrong Email or Password !'
+    //                 ],
+    //                 400
+    //             )->header('Access-Control-Allow-Origin', '*')->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    //         }
+    //     }
+    //     if(strlen($request->idMall) < 1) return response()->json(['success' => false,'pesan' => 'ID Mall Required!'],400)->header('Access-Control-Allow-Origin', '*')->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    //     if(MallList::where('id', '=', $request->idMall)->first() == null) return response()->json(['success' => false,'pesan' => 'Mall not Found!'],400)->header('Access-Control-Allow-Origin', '*')->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    //     MallList::where('id', '=', $request->idMall)->first()->delete();
+    //     foreach(Order::where('mall_id', '=', $request->idMall)->get() as $order){
+    //         $order->delete();
+    //     }
+    //     return response()->json(
+    //         [
+    //             'success' => true,
+    //             'pesan' => 'Delete Successfully'
+    //         ],
+    //         200
+    //     )->header('Access-Control-Allow-Origin', '*')->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    // }
 }

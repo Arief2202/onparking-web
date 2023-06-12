@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('alamatMall');
             $table->string('openTimeMall');
             $table->string('fotoMall');
+            $table->integer('user_id')->nullable();
             // $table->integer('kuotaMall')->default('5');
             $table->timestamps();
         });

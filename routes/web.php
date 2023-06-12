@@ -5,6 +5,9 @@ use App\Http\Controllers\LoginRegisterController;
 use App\Http\Controllers\MallController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\SpotParkirController;
+use App\Http\Controllers\ProfileController;
+use App\Models\MallList;
+use Illuminate\Support\Facades\Auth;
 
 
 /*
@@ -19,12 +22,40 @@ use App\Http\Controllers\SpotParkirController;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('/dashboard');
 });
 
 Route::get('/dashboard', function () {
+    if(Auth::user()->role == 0) return redirect('/profile');
     return view('dashboard');
 })->middleware(['auth'])->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    // $ownerMall = MallList::where('user_id', Auth::user()->id)->first();
+    Route::controller(ProfileController::class)->group(function () {
+        Route::get('/profile', 'edit')->name('profile.edit');
+        Route::get('/profile/{id}', 'edit2')->name('profile.edit2');
+        Route::patch('/profile', 'update')->name('profile.update');
+        Route::delete('/profile', 'destroy')->name('profile.destroy');
+
+        Route::get('/user/list', 'webUserList')->name('user_list');
+    });
+
+    Route::controller(MallController::class)->group(function () {
+        Route::post('/mymall/update', 'updateMall')->name('mall.update');
+        
+        Route::get('/mymall', 'webMyMallList')->name('my_mall');
+        Route::get('/mall/list', 'webMallList')->name('mall_list');
+        Route::post('/changeOwner', 'changeOwner');
+        Route::post('/deleteMall', 'deleteMall');
+        Route::post('/tambah-mall', 'tambahMall');
+    });
+
+    Route::controller(SpotParkirController::class)->group(function () {
+        Route::post('/deleteSpot', 'deleteSpot');
+        Route::post('/tambah-spot', 'tambahSpot');
+    });
+});
 
 Route::controller(LoginRegisterController::class)->group(function () {
     Route::get('/api/login', function(){return abort(404);});

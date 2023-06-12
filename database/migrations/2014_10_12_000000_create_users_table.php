@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('role')->default("0");
             $table->string('card_id')->nullable();
+            $table->integer('owner_mall')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

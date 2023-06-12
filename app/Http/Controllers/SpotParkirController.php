@@ -11,6 +11,24 @@ use Illuminate\Http\Request;
 
 class SpotParkirController extends Controller
 {
+    public function tambahSpot(Request $request){
+        $spot = new spot_parkir();
+        $spot->mall_id = $request->mall_id;
+        $spot->lantai = $request->lantai;
+        $spot->blok = $request->blok;
+        $spot->harga = $request->harga;
+        $spot->save();
+        return redirect('/mymall');
+        
+    }
+
+    public function deleteSpot(Request $request){
+        $spot = spot_parkir::where('id', $request->id)->first();         
+        foreach(Order::where('spot_parkir_id', $spot->id)->get() as $order) $order->delete();
+        $spot->delete();
+        return redirect('/mymall');        
+    }
+
     public function setCarExist(Request $request)
     {
         if(strlen($request->spot_parkir_id) < 1) return response()->json(['success' => false,'pesan' => 'Spot Parkir Id Required!'],400)->header('Access-Control-Allow-Origin', '*')->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
